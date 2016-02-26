@@ -1,0 +1,26 @@
+{
+  "name": "cordova-plugin-mqtt-pahojs",
+  "cordova_name": "MQTT JavaScript Client",
+  "version": "1.0.0",
+  "description": "Pure JavaScript MQTT client library. Based on Paho.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cordova-mqtt"
+  ],
+  "author": "Alexander Borovsky",
+  "license": "Apache-2.0",
+  "platforms": [
+    "ios",
+    "android",
+    "wp8",
+    "windows"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.0.0"
+    }
+  ]
+}
