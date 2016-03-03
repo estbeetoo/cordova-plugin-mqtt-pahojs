@@ -1,23 +1,28 @@
-   <?xml version="1.0" encoding="UTF-8"?>
-    <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-            id="cordova-plugin-mqtt-pahojs" version="0.1.0">
-        <name>MQTT Paho</name>
-        <description>Cordova MQTT Paho Plugin</description>
-        <license>Apache 2.0</license>
-        <keywords>cordova,mqtt,paho</keywords>
-        <js-module src="www/mqtt.js" name="mqtt">
-	    <clobbers target="window.plugins.mqtt"/>
-        </js-module>
-        <!--platform name="ios">
-            <config-file target="config.xml" parent="/*">
-                <feature name="Device">
-                    <param name="ios-package" value="CDVDevice"/>
-                </feature>
-            </config-file>
-            <header-file src="src/ios/CDVDevice.h" />
-            <source-file src="src/ios/CDVDevice.m" />
-        </platform-->
-	<engines>
-		<engine name="cordova" version=">=3.0.0"/>
-	</engines>
-    </plugin>
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="cordova-plugin-mqtt-pahojs" version="0.1.0">
+    <name>MQTT Paho</name>
+    <description>Cordova MQTT Paho Plugin</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,mqtt,paho</keywords>
+    <dependency id="com.feedhenry.eventemitter" version=">=0.1.0"/>
+    <dependency id="cordova-plugin-x-toast" version=">=2.4.2"/>
+    <js-module src="www/mqtt.js" name="mqtt">
+        <clobbers target="window.plugins.mqtt"/>
+    </js-module>
+    <js-module src="www/paho-mqttws31.js" name="paho_mqttws31">
+        <clobbers target="window.plugins.paho_mqttws31"/>
+    </js-module>
+    <!--platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Device">
+                <param name="ios-package" value="CDVDevice"/>
+            </feature>
+        </config-file>
+        <header-file src="src/ios/CDVDevice.h" />
+        <source-file src="src/ios/CDVDevice.m" />
+    </platform-->
+    <engines>
+        <engine name="cordova" version=">=3.0.0"/>
+    </engines>
+</plugin>
