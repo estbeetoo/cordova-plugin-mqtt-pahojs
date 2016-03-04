@@ -48,7 +48,7 @@ MQTTClient.prototype._startReconnectCounter = function(callback) {
   this.reconnectCounterCounted = 0;
   this._showReconnectToast(this.reconnectDelay[this.reconnectDelayIdx]);
   this.reconnectCounter = setInterval(function() {
-    this.reconnectCounterCounted += 250;
+    this.reconnectCounterCounted += 1000;
     var time = (this.reconnectDelay[this.reconnectDelayIdx] - this.reconnectCounterCounted);
     if (time > 0)
       this._showReconnectToast(time);
@@ -56,7 +56,7 @@ MQTTClient.prototype._startReconnectCounter = function(callback) {
       this._stopReconnectCounter();
       callback && callback();
     }
-  }.bind(this), 250);
+  }.bind(this), 1000);
 }
 
 MQTTClient.prototype._showReconnectToast = function(time /*in ms*/) {
