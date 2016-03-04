@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-        id="cordova-plugin-mqtt-pahojs" version="0.1.0">
+        id="cordova-plugin-mqtt-pahojs" version="1.0.1">
     <name>MQTT Paho</name>
     <description>Cordova MQTT Paho Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,mqtt,paho</keywords>
-    <dependency id="com.feedhenry.eventemitter" version=">=0.1.0"/>
+    <dependency id="com.feedhenry.eventemitter" url="https://github.com/mclhrn/cordova-eventemitter-public" version=">=0.1.0"/>
     <dependency id="cordova-plugin-x-toast" version=">=2.4.2"/>
     <js-module src="www/mqtt.js" name="mqtt">
         <clobbers target="window.plugins.mqtt"/>
