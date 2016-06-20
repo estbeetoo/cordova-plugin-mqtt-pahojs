@@ -2,6 +2,7 @@ var Paho = require('./paho_mqttws31');
 var EventEmitter = require('com.feedhenry.eventemitter.EventEmitter');
 
 function MQTTClient(options) {
+  EventEmitter(this);
   this.uri = options.uri || 'mqtt://' + options.host + ':' + (options.port || 8080);
   if (this.uri.substring(this.uri.length - 1) !== '/') this.uri += '/';
   this.disconnectNormally = false;
@@ -21,7 +22,8 @@ function MQTTClient(options) {
 
 MQTTClient.prototype._showConnectionStatus = function(status) {
   if (status && this.reportConnectionStatus)
-    window.plugins.toast.showLongBottom(status)
+    window.plugins.toast.showLongBottom(status);
+  this.emit('status', status);
 };
 
 MQTTClient.prototype._setupConnection = function() {
@@ -33,18 +35,21 @@ MQTTClient.prototype._setupConnection = function() {
 MQTTClient.prototype._connectionLost = function() {
   this.connected = false;
   this.reconnectTry = 0;
-  //console.log('-------_connectionLost restoreConnection[' + this.restoreConnection + ']disconnectNormally[' + this.disconnectNormally + ']');
-  window.plugins.mqtt_event_emitter.emit('disconnected');
+  this.emit('disconnected');
   if (this.restoreConnection && !this.disconnectNormally) this.reconnect();
 };
 
 MQTTClient.prototype._onMessageArrived = function(msg) {
-  window.plugins.mqtt_event_emitter.emit('data', msg);
+  this.emit('data', msg);
 };
 
+MQTTClient.prototype._shouldReconnect = function() {
+  if (this.reconnectDelayIdx !== null && this.reconnectDelay[this.reconnectDelayIdx] === -1)
+    return false;
+  return true;
+}
+
 MQTTClient.prototype._startReconnectCounter = function(callback) {
-  this._stopReconnectCounter();
-  this._incrementReconnectDelayIdx();
   this.reconnectCounterCounted = 0;
   this._showReconnectToast(this.reconnectDelay[this.reconnectDelayIdx]);
   this.reconnectCounter = setInterval(function() {
@@ -53,6 +58,7 @@ MQTTClient.prototype._startReconnectCounter = function(callback) {
     if (time > 0)
       this._showReconnectToast(time);
     else {
+      this.reconnectCounterCounted = 0;
       this._stopReconnectCounter();
       callback && callback();
     }
@@ -77,40 +83,44 @@ MQTTClient.prototype._stopReconnectCounter = function() {
     clearInterval(this.reconnectCounter);
 }
 
-MQTTClient.prototype.connect = function() {
+MQTTClient.prototype.connect = function(reconnect) {
+  if (!reconnect)
+    this._markDisconnected();
+  this._stopReconnectCounter();
   this._showConnectionStatus('Connecting...');
-  window.plugins.mqtt_event_emitter.emit('connecting');
+  this.emit('connecting');
   this.disconnectNormally = false;
-  const that = this;
-  const promise = new Promise(function(resolve, reject) {
-    //console.log('-----connect Promise');
+  return new Promise(function(resolve, reject) {
     function connectionFailed(error) {
-      that.connected = false;
-      if (that.restoreConnection && !that.disconnectNormally) {
-        that._startReconnectCounter(that.reconnect.bind(that));
-        window.plugins.mqtt_event_emitter.emit('schedule_reconnect', that.reconnectDelay);
+      this.connected = false;
+      this._incrementReconnectDelayIdx();
+      if (this.restoreConnection && !this.disconnectNormally && this._shouldReconnect()) {
+        this._startReconnectCounter(this.reconnect.bind(this));
+        this.emit('schedule_reconnect', this.reconnectDelay);
       } else {
-        that._showConnectionStatus('Disconnected');
-        window.plugins.mqtt_event_emitter.emit('disconnected', error);
+        this.disconnect();
       }
       reject && reject();
-    }
+    };
 
     function connectionSuccess() {
-      that._showConnectionStatus('Connected');
-      window.plugins.mqtt_event_emitter.emit('connected');
-      that.reconnectTry = 0;
-      that.connected = true;
+      this._showConnectionStatus('Connected');
+      this.emit('connected');
+      this.reconnectTry = 0;
+      this.reconnectDelayIdx = null;
+      this.connected = true;
       resolve && resolve();
-    }
+    };
 
-    var connectionParams = {onSuccess: connectionSuccess, onFailure: connectionFailed};
-    if (that.keepAliveInterval) connectionParams.keepAliveInterval = that.keepAliveInterval;
-    if (that.timeout) connectionParams.timeout = that.timeout;
-    console.log('connectionParams.timeout == ' + connectionParams.timeout);
-    that.connection.connect(connectionParams);
-  });
-  return promise;
+    var connectionParams = {onSuccess: connectionSuccess.bind(this), onFailure: connectionFailed.bind(this)};
+    if (this.keepAliveInterval) connectionParams.keepAliveInterval = this.keepAliveInterval;
+    if (this.timeout) connectionParams.timeout = this.timeout;
+    try {
+      this.connection.connect(connectionParams);
+    } catch (e) {
+      reject && reject(e);
+    }
+  }.bind(this));
 };
 
 MQTTClient.prototype.isConnected = function() {
@@ -121,16 +131,24 @@ MQTTClient.prototype.reconnect = function() {
   this.disconnectNormally = false;
   if (this.connected) this.disconnect().then(this.connect.bind(this)); else {
     this._setupConnection();
-    this.connect();
+    this.connect(true);
   }
 };
 
-MQTTClient.prototype.disconnect = function() {
-  window.plugins.mqtt_event_emitter.emit('disconnect');
+MQTTClient.prototype._markDisconnected = function() {
+  this.reconnectDelayIdx = null;
   this.disconnectNormally = true;
   this.reconnectTry = 0;
   this.connected = false;
-  this.connection.disconnect();
+}
+
+MQTTClient.prototype.disconnect = function() {
+  this._stopReconnectCounter();
+  this.emit('disconnect');
+  this._markDisconnected();
+  if (this.connection.isConnected())
+    this.connection.disconnect();
+  this._showConnectionStatus('Disconnected');
 };
 
 MQTTClient.prototype.publish = function(topic, payload, options) {
@@ -152,13 +170,5 @@ MQTTClient.prototype.publish = function(topic, payload, options) {
   }.bind(this);
   this.connection.send(message);
 };
-
-cordova.addConstructor(function() {
-  if (!window.plugins) {
-    window.plugins = {};
-  }
-
-  window.plugins.mqtt_event_emitter = new EventEmitter();
-});
 
 module.exports = MQTTClient;
