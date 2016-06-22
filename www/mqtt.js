@@ -20,6 +20,8 @@ function MQTTClient(options) {
   this._setupConnection();
 }
 
+MQTTClient.prototype = new EventEmitter();
+
 MQTTClient.prototype._showConnectionStatus = function(status) {
   if (status && this.reportConnectionStatus)
     window.plugins.toast.showLongBottom(status);
