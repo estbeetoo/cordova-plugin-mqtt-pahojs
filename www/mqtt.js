@@ -140,13 +140,25 @@ MQTTClient.prototype.isConnected = function () {
     return this.connected;
 };
 
-MQTTClient.prototype.reconnect = function () {
+MQTTClient.prototype.reconnect = function() {
+    function _connect() {
+        this.connect(true).catch(function(e) {
+            console.error('Error connecting, cause: ' + (e ? e.message : 'unknown reason'));
+        });
+    }
+
     this.disconnectNormally = false;
-    if (this.connected) this.disconnect().then(this.connect.bind(this)); else {
+    if (this.connected) {
+        this.disconnect().then(_connect.bind(this)).catch(function(e) {
+            console.error('Error disconnecting, cause: ' + (e ? e.message : 'unknown reason'));
+            setTimeout(_connect.bind(this), 0);
+        }.bind(this));
+    } else {
         this._setupConnection();
-        this.connect(true);
+        _connect.apply(this);
     }
 };
+
 
 MQTTClient.prototype._markDisconnected = function () {
     this.reconnectDelayIdx = null;
