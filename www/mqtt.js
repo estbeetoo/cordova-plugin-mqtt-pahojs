@@ -159,7 +159,6 @@ MQTTClient.prototype.reconnect = function() {
   }
 };
 
-
 MQTTClient.prototype._markDisconnected = function() {
   this.reconnectDelayIdx = null;
   this.disconnectNormally = true;
