@@ -18,6 +18,8 @@ function MQTTClient(options) {
   this.connected = false;
   this.reconnectTry = 0;
   this.clientId = options.clientId || options.clientID || options.client || "BeeToo";
+  this.userName = options.userName ? '' + options.userName : null;
+  this.password = options.password ? '' + options.password : null;
   this.reportConnectionStatus = options.reportConnectionStatus || false;
   this.restoreConnection = true;
   this.reconnectDelay = options.reconnectDelay || [1000, 1000, 1000, 10000, 10000, 60000];
@@ -125,7 +127,12 @@ MQTTClient.prototype.connect = function(reconnect) {
       resolve && resolve();
     };
 
-    var connectionParams = {onSuccess: connectionSuccess.bind(this), onFailure: connectionFailed.bind(this)};
+    var connectionParams = {
+      onSuccess: connectionSuccess.bind(this),
+      onFailure: connectionFailed.bind(this),
+      userName: this.userName,
+      password: this.password
+    };
     if (this.keepAliveInterval) connectionParams.keepAliveInterval = this.keepAliveInterval;
     if (this.timeout) connectionParams.timeout = this.timeout;
     try {
@@ -143,14 +150,14 @@ MQTTClient.prototype.isConnected = function() {
 MQTTClient.prototype.reconnect = function() {
   function _connect() {
     this.connect(true).catch(function(e) {
-      console.error('Error connecting, cause: ' + (e ? e.message : 'unknown reason'));
+      console.error('Error connecting, cause: ' + (e ? (e.message || e.errorMessage) : 'unknown reason'));
     });
   }
 
   this.disconnectNormally = false;
   if (this.connected) {
     this.disconnect().then(_connect.bind(this)).catch(function(e) {
-      console.error('Error disconnecting, cause: ' + (e ? e.message : 'unknown reason'));
+      console.error('Error disconnecting, cause: ' + (e ? (e.message || e.errorMessage) : 'unknown reason'));
       setTimeout(_connect.bind(this), 0);
     }.bind(this));
   } else {
