@@ -119,12 +119,12 @@ MQTTClient.prototype.connect = function(reconnect) {
     };
 
     function connectionSuccess() {
-      this._showConnectionStatus('Connected');
-      this.emit('connected');
+      this.connected = true;
       this.reconnectTry = 0;
       this.reconnectDelayIdx = null;
-      this.connected = true;
       resolve && resolve();
+      this._showConnectionStatus('Connected');
+      this.emit('connected');
     };
 
     var connectionParams = {
