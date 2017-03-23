@@ -128,11 +128,13 @@ MQTTClient.prototype.connect = function(reconnect) {
     };
 
     var connectionParams = {
-      onSuccess: connectionSuccess.bind(this),
-      onFailure: connectionFailed.bind(this),
-      userName: this.userName,
-      password: this.password
+        onSuccess: connectionSuccess.bind(this),
+        onFailure: connectionFailed.bind(this)
     };
+    if (this.userName && this.userName.length) {
+        connectionParams.userName = this.userName;
+        connectionParams.password = this.password;
+    }
     if (this.keepAliveInterval) connectionParams.keepAliveInterval = this.keepAliveInterval;
     if (this.timeout) connectionParams.timeout = this.timeout;
     try {
