@@ -41,8 +41,8 @@ MQTTClient.prototype._showConnectionStatus = function(status) {
 
 MQTTClient.prototype._setupConnection = function() {
     if (this.connection) {
-        this.connection.onConnectionLost = null;
-        this.connection.onMessageArrived = null;
+        this.connection.onConnectionLost = function(){console.debug('stale onConnectionLost called');};
+        this.connection.onMessageArrived = function(){console.debug('stale onMessageArrived called');};
     }
     this.connection = new Paho.MQTT.Client(this.uri, this.clientId);
     this.connection.onConnectionLost = this._connectionLost.bind(this);
