@@ -41,12 +41,16 @@ MQTTClient.prototype._showConnectionStatus = function(status) {
 
 MQTTClient.prototype._setupConnection = function() {
   if (this.connection) {
-    this.connection.onConnectionLost = function() {
-      console.debug('stale onConnectionLost called');
-    };
-    this.connection.onMessageArrived = function() {
-      console.debug('stale onMessageArrived called');
-    };
+    try {
+      this.connection.onConnectionLost = function() {
+        console.debug('stale onConnectionLost called');
+      };
+      this.connection.onMessageArrived = function() {
+        console.debug('stale onMessageArrived called');
+      };
+      this.connection.disconnect();
+    } catch (e) {
+    }
   }
   this.connection = new Paho.MQTT.Client(this.uri, this.clientId);
   this.connection.onConnectionLost = this._connectionLost.bind(this);
@@ -127,6 +131,9 @@ MQTTClient.prototype.connect = function(reconnect) {
     };
 
     function connectionSuccess() {
+      if (this.disconnectNormally && this.connected === false) {
+        return this.connection.disconnect();
+      }
       this.connected = true;
       this.reconnectTry = 0;
       this.reconnectDelayIdx = null;
@@ -147,8 +154,8 @@ MQTTClient.prototype.connect = function(reconnect) {
     if (this.timeout) connectionParams.timeout = this.timeout;
     try {
       this.connection.connect(connectionParams);
-    } catch (e) {
-      reject && reject(e);
+    } catch (error) {
+      reject && reject(error);
     }
   }.bind(this));
 };
