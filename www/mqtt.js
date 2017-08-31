@@ -1,4 +1,4 @@
-var Paho = require('./paho_mqttws31');
+var Paho = require('cordova-plugin-mqtt-pahojs.paho_mqttws31');
 var EventEmitter = require('com.feedhenry.eventemitter.EventEmitter');
 var SYSTEM_EVENTS = {
   'status': true,
