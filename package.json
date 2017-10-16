@@ -11,6 +11,10 @@
   ],
   "author": "Alexander Borovsky",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/estbeetoo/cordova-plugin-mqtt-pahojs.git"
+  },
   "platforms": [
     "ios",
     "android",
